@@ -7,6 +7,8 @@ const initialState = {
   role: '',
 };
 
+const ROLES = ['Doctor', 'Nurse', 'Admin', 'Technician', 'Receptionist', 'Pharmacist'];
+
 function StaffForm({ selectedStaff, onSubmit, isSubmitting }) {
   const [formData, setFormData] = useState(initialState);
 
@@ -36,55 +38,56 @@ function StaffForm({ selectedStaff, onSubmit, isSubmitting }) {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="row g-3">
-        <div className="col-md-6">
-          <label className="form-label" htmlFor="first_name">First Name</label>
+    <form onSubmit={handleSubmit} className="staff-form">
+      <div className="form-grid">
+        <div className="form-group">
+          <label htmlFor="first_name">First Name</label>
           <input
-            className="form-control"
             id="first_name"
             name="first_name"
+            placeholder="Enter first name"
             value={formData.first_name}
             onChange={handleChange}
             required
           />
         </div>
-        <div className="col-md-6">
-          <label className="form-label" htmlFor="last_name">Last Name</label>
+        <div className="form-group">
+          <label htmlFor="last_name">Last Name</label>
           <input
-            className="form-control"
             id="last_name"
             name="last_name"
+            placeholder="Enter last name"
             value={formData.last_name}
             onChange={handleChange}
             required
           />
         </div>
-        <div className="col-md-6">
-          <label className="form-label" htmlFor="email">Email</label>
+        <div className="form-group">
+          <label htmlFor="email">Email</label>
           <input
             type="email"
-            className="form-control"
             id="email"
             name="email"
+            placeholder="Enter email address"
             value={formData.email}
             onChange={handleChange}
             required
           />
         </div>
-        <div className="col-md-6">
-          <label className="form-label" htmlFor="role">Role</label>
-          <input
-            className="form-control"
-            id="role"
-            name="role"
-            value={formData.role}
-            onChange={handleChange}
-            required
-          />
+        <div className="form-group">
+          <label htmlFor="role">Role</label>
+          <select id="role" name="role" value={formData.role} onChange={handleChange} required>
+            <option value="" disabled>Select a role</option>
+            {ROLES.map((role) => (
+              <option key={role} value={role}>{role}</option>
+            ))}
+          </select>
         </div>
       </div>
-      <div className="mt-4 text-end">
+      <div className="form-actions">
+        <button type="button" className="btn" style={{ background: '#f0f4f8', color: '#495057' }} onClick={() => onSubmit(null)}>
+          Cancel
+        </button>
         <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
           {isSubmitting ? 'Saving...' : selectedStaff ? 'Update Staff' : 'Add Staff'}
         </button>
