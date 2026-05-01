@@ -5,14 +5,14 @@ import NotFoundPage from './pages/NotFoundPage';
 
 function App() {
   return (
-    <div className="bg-light min-vh-100">
+    <>
       <AppNavbar />
       <Routes>
         <Route path="/" element={<StaffPage />} />
         <Route path="/staff" element={<Navigate to="/" replace />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
-    </div>
+    </>
   );
 }
 
