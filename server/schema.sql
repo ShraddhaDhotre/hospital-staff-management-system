@@ -1,5 +1,5 @@
-CREATE DATABASE IF NOT EXISTS staff_management;
-USE staff_management;
+CREATE DATABASE IF NOT EXISTS hospital_db;
+USE hospital_db;
 
 CREATE TABLE IF NOT EXISTS staff (
   id INT AUTO_INCREMENT PRIMARY KEY,
