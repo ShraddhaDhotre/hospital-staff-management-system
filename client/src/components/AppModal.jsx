@@ -1,6 +1,14 @@
 import { useEffect } from 'react';
 
-function AppModal({ title, children, onClose, onConfirm, confirmLabel = 'Confirm', variant = 'primary' }) {
+function AppModal({
+  title,
+  children,
+  onClose,
+  onConfirm,
+  confirmLabel = 'Confirm',
+  variant = 'primary',
+  confirmDisabled = false,
+}) {
   useEffect(() => {
     const handleEsc = (e) => {
       if (e.key === 'Escape') onClose();
@@ -27,7 +35,12 @@ function AppModal({ title, children, onClose, onConfirm, confirmLabel = 'Confirm
             <button type="button" className="btn btn-secondary" onClick={onClose}>
               Cancel
             </button>
-            <button type="button" className={`btn btn-${variant}`} onClick={onConfirm}>
+            <button
+              type="button"
+              className={`btn btn-${variant}`}
+              onClick={onConfirm}
+              disabled={confirmDisabled}
+            >
               {confirmLabel}
             </button>
           </div>

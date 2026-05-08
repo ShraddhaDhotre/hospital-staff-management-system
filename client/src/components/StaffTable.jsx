@@ -1,11 +1,16 @@
 function StaffTable({ staff, onEdit, onDelete }) {
-  const getInitials = (first, last) => `${first[0]}${last[0]}`.toUpperCase();
+  const getInitials = (first, last) => {
+    const a = (first && first[0]) || '?';
+    const b = (last && last[0]) || '?';
+    return `${a}${b}`.toUpperCase();
+  };
 
   const getRoleClass = (role) => {
     const r = role.toLowerCase();
     if (r === 'doctor') return 'doctor';
     if (r === 'nurse') return 'nurse';
     if (r === 'admin' || r === 'administrator') return 'admin';
+    if (r === 'receptionist') return 'receptionist';
     if (r === 'technician') return 'technician';
     return 'default';
   };
@@ -20,7 +25,7 @@ function StaffTable({ staff, onEdit, onDelete }) {
           <line x1="16" y1="11" x2="22" y2="11" />
         </svg>
         <h3>No staff members found</h3>
-        <p>Add your first staff member to get started.</p>
+        <p>Try changing filters or add a new staff member.</p>
       </div>
     );
   }
@@ -30,15 +35,19 @@ function StaffTable({ staff, onEdit, onDelete }) {
       <table className="data-table">
         <thead>
           <tr>
+            <th>ID</th>
             <th>Name</th>
             <th>Email</th>
+            <th>Department</th>
             <th>Role</th>
+            <th>Shift</th>
             <th style={{ textAlign: 'right' }}>Actions</th>
           </tr>
         </thead>
         <tbody>
           {staff.map((member) => (
             <tr key={member.id}>
+              <td className="id-cell">{member.id}</td>
               <td>
                 <div className="staff-name">
                   <div className="avatar">{getInitials(member.first_name, member.last_name)}</div>
@@ -46,8 +55,12 @@ function StaffTable({ staff, onEdit, onDelete }) {
                 </div>
               </td>
               <td className="email-cell">{member.email}</td>
+              <td className="dept-cell">{member.department_name || '—'}</td>
               <td>
                 <span className={`role-badge ${getRoleClass(member.role)}`}>{member.role}</span>
+              </td>
+              <td>
+                <span className="role-badge default">{member.shift_type || 'Morning'}</span>
               </td>
               <td>
                 <div className="actions-cell">

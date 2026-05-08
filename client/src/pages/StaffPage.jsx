@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import api from '../api';
 import StaffTable from '../components/StaffTable';
 import StaffForm from '../components/StaffForm';
@@ -6,8 +6,11 @@ import AppModal from '../components/AppModal';
 
 function StaffPage() {
   const [staff, setStaff] = useState([]);
+  const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
+  const [staffIdFilter, setStaffIdFilter] = useState('');
+  const [departmentFilter, setDepartmentFilter] = useState('');
+  const [searchText, setSearchText] = useState('');
   const [selectedStaff, setSelectedStaff] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -19,39 +22,45 @@ function StaffPage() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const fetchStaff = async () => {
+  useEffect(() => {
+    const loadDepartments = async () => {
+      try {
+        const { data } = await api.get('/departments');
+        setDepartments(data);
+      } catch (error) {
+        showToast(error.response?.data?.message || 'Failed to load departments', 'error');
+      }
+    };
+    loadDepartments();
+  }, []);
+
+  const fetchStaff = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await api.get('/staff');
+      const params = {};
+      if (staffIdFilter.trim()) params.id = staffIdFilter.trim();
+      if (departmentFilter) params.department_id = departmentFilter;
+      if (searchText.trim()) params.q = searchText.trim();
+      const response = await api.get('/staff', { params });
       setStaff(response.data);
     } catch (error) {
       showToast(error.response?.data?.message || 'Failed to load staff data', 'error');
     } finally {
       setLoading(false);
     }
-  };
+  }, [staffIdFilter, departmentFilter, searchText]);
 
   useEffect(() => {
     fetchStaff();
-  }, []);
-
-  const filteredStaff = useMemo(() => {
-    if (!search.trim()) return staff;
-    const query = search.toLowerCase();
-    return staff.filter(
-      (member) =>
-        member.first_name.toLowerCase().includes(query) ||
-        member.last_name.toLowerCase().includes(query) ||
-        member.email.toLowerCase().includes(query) ||
-        member.role.toLowerCase().includes(query)
-    );
-  }, [staff, search]);
+  }, [fetchStaff]);
 
   const stats = useMemo(() => {
     const uniqueRoles = new Set(staff.map((m) => m.role.toLowerCase()));
+    const uniqueDepts = new Set(staff.map((m) => m.department_id).filter(Boolean));
     return {
       total: staff.length,
       roles: uniqueRoles.size,
+      departments: uniqueDepts.size,
       latest: staff.length > 0 ? new Date(staff[0].created_at).toLocaleDateString() : '—',
     };
   }, [staff]);
@@ -96,6 +105,11 @@ function StaffPage() {
     } catch (error) {
       showToast(error.response?.data?.message || 'Unable to delete staff member', 'error');
     }
+  };
+
+  const closeForm = () => {
+    setIsFormOpen(false);
+    setSelectedStaff(null);
   };
 
   return (
@@ -145,11 +159,23 @@ function StaffPage() {
           </div>
           <div>
             <div className="stat-value">{stats.roles}</div>
-            <div className="stat-label">Unique Roles</div>
+            <div className="stat-label">Roles in results</div>
           </div>
         </div>
         <div className="stat-card">
           <div className="stat-icon info">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+              <polyline points="9 22 9 12 15 12 15 22" />
+            </svg>
+          </div>
+          <div>
+            <div className="stat-value">{stats.departments}</div>
+            <div className="stat-label">Depts in results</div>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon primary">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10" />
               <polyline points="12 6 12 12 16 14" />
@@ -157,7 +183,7 @@ function StaffPage() {
           </div>
           <div>
             <div className="stat-value">{stats.latest}</div>
-            <div className="stat-label">Last Added</div>
+            <div className="stat-label">Last added (list)</div>
           </div>
         </div>
       </div>
@@ -165,17 +191,38 @@ function StaffPage() {
       <div className="main-card">
         <div className="card-header">
           <h2>Staff Directory</h2>
-          <div className="card-header-actions">
-            <div className="search-input">
+          <div className="card-header-actions staff-filters">
+            <input
+              type="number"
+              min={1}
+              className="filter-input"
+              placeholder="Staff ID"
+              value={staffIdFilter}
+              onChange={(e) => setStaffIdFilter(e.target.value)}
+              aria-label="Filter by staff ID"
+            />
+            <select
+              className="filter-select"
+              value={departmentFilter}
+              onChange={(e) => setDepartmentFilter(e.target.value)}
+              aria-label="Filter by department"
+            >
+              <option value="">All departments</option>
+              {departments.map((d) => (
+                <option key={d.id} value={d.id}>{d.name}</option>
+              ))}
+            </select>
+            <div className="search-input search-input--grow">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="11" cy="11" r="8" />
                 <line x1="21" y1="21" x2="16.65" y2="16.65" />
               </svg>
               <input
                 type="text"
-                placeholder="Search staff..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search name, email, ID, or department…"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                aria-label="Search staff"
               />
             </div>
             <button type="button" className="btn btn-primary" onClick={handleOpenCreate}>
@@ -193,16 +240,22 @@ function StaffPage() {
             <div className="spinner" />
           </div>
         ) : (
-          <StaffTable staff={filteredStaff} onEdit={handleOpenEdit} onDelete={setStaffToDelete} />
+          <StaffTable staff={staff} onEdit={handleOpenEdit} onDelete={setStaffToDelete} />
         )}
       </div>
 
       {isFormOpen && (
         <AppModal
-          title={selectedStaff ? 'Edit Staff Member' : 'Add Staff Member'}
-          onClose={() => setIsFormOpen(false)}
+          title={selectedStaff ? 'Edit Staff Member' : 'Register Staff'}
+          onClose={closeForm}
         >
-          <StaffForm selectedStaff={selectedStaff} onSubmit={handleSubmit} isSubmitting={isSubmitting} />
+          <StaffForm
+            selectedStaff={selectedStaff}
+            departments={departments}
+            onSubmit={handleSubmit}
+            onCancel={closeForm}
+            isSubmitting={isSubmitting}
+          />
         </AppModal>
       )}
 

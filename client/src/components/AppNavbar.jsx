@@ -23,6 +23,12 @@ function AppNavbar({ theme, onToggleTheme }) {
             <NavLink to="/" className={({ isActive }) => `navbar-link ${isActive ? 'active' : ''}`}>
               Staff
             </NavLink>
+            <NavLink to="/attendance" className={({ isActive }) => `navbar-link ${isActive ? 'active' : ''}`}>
+              Attendance & Shifts
+            </NavLink>
+            <NavLink to="/departments" className={({ isActive }) => `navbar-link ${isActive ? 'active' : ''}`}>
+              Departments
+            </NavLink>
           </div>
           <button
             type="button"

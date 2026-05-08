@@ -5,11 +5,13 @@ const initialState = {
   last_name: '',
   email: '',
   role: '',
+  department_id: '',
+  shift_type: 'Morning',
 };
 
-const ROLES = ['Doctor', 'Nurse', 'Admin', 'Technician', 'Receptionist', 'Pharmacist'];
+const ROLES = ['Doctor', 'Nurse', 'Admin', 'Receptionist'];
 
-function StaffForm({ selectedStaff, onSubmit, isSubmitting }) {
+function StaffForm({ selectedStaff, departments, onSubmit, onCancel, isSubmitting }) {
   const [formData, setFormData] = useState(initialState);
 
   useEffect(() => {
@@ -19,6 +21,8 @@ function StaffForm({ selectedStaff, onSubmit, isSubmitting }) {
         last_name: selectedStaff.last_name,
         email: selectedStaff.email,
         role: selectedStaff.role,
+        department_id: String(selectedStaff.department_id ?? ''),
+        shift_type: selectedStaff.shift_type ?? 'Morning',
       });
     } else {
       setFormData(initialState);
@@ -34,7 +38,10 @@ function StaffForm({ selectedStaff, onSubmit, isSubmitting }) {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    onSubmit(formData);
+    onSubmit({
+      ...formData,
+      department_id: Number(formData.department_id),
+    });
   };
 
   return (
@@ -83,12 +90,44 @@ function StaffForm({ selectedStaff, onSubmit, isSubmitting }) {
             ))}
           </select>
         </div>
+        <div className="form-group">
+          <label htmlFor="department_id">Department</label>
+          <select
+            id="department_id"
+            name="department_id"
+            value={formData.department_id}
+            onChange={handleChange}
+            required
+            disabled={departments.length === 0}
+          >
+            <option value="" disabled>
+              {departments.length === 0 ? 'Add a department first' : 'Select department'}
+            </option>
+            {departments.map((d) => (
+              <option key={d.id} value={d.id}>{d.name}</option>
+            ))}
+          </select>
+        </div>
+        <div className="form-group">
+          <label htmlFor="shift_type">Default Shift</label>
+          <select
+            id="shift_type"
+            name="shift_type"
+            value={formData.shift_type}
+            onChange={handleChange}
+            required
+          >
+            <option value="Morning">Morning</option>
+            <option value="Evening">Evening</option>
+            <option value="Night">Night</option>
+          </select>
+        </div>
       </div>
       <div className="form-actions">
-        <button type="button" className="btn" style={{ background: '#f0f4f8', color: '#495057' }} onClick={() => onSubmit(null)}>
+        <button type="button" className="btn btn-secondary" onClick={onCancel}>
           Cancel
         </button>
-        <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+        <button type="submit" className="btn btn-primary" disabled={isSubmitting || departments.length === 0}>
           {isSubmitting ? 'Saving...' : selectedStaff ? 'Update Staff' : 'Add Staff'}
         </button>
       </div>
